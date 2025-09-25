@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game Turbinado!</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+  <h1>Snack Game</h1>
+  
+  <div id="mainMenu" class="overlay">
+    <h2>Bem-vindo ao Snake!</h2>
+    <p>Use as setas para jogar. O desafio aumenta a cada 5 maçãs!</p>
+    <button id="startButton">INICIAR JOGO</button>
+  </div>
+
+  <div id="gameOverScreen" class="overlay hidden">
+    <h2>FIM DE JOGO</h2>
+    <p id="finalScoreText"></p>
+    <button id="restartButton">JOGAR NOVAMENTE</button>
+  </div>
+
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  
+  <div id="game-stats">
+    <div id="high-score">Recorde: 0</div> 
+    <div id="score">Pontuação: 0</div>
+    <div id="apples-eaten">🍎 Comidas: 0</div>
+  </div>
+ 
+  <div id="controls">
+    <button id="pauseBtn">⏸️ Pausar</button>
+    <button id="resumeBtn">▶️ Retomar</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
