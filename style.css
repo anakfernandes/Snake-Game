@@ -9,7 +9,7 @@ body {
   height: 100vh; 
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(180deg, #145a32, #27ae60); 
+  background: linear-gradient(180deg, #145a32, #27ae60); /* Fundo gradiente verde */
   color: #ecf0f1;
 }
 
@@ -18,18 +18,23 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 4px;
   color: #f1c40f; 
-  text-shadow: 2px 2px 5px #000;
+  text-shadow: 2px 2px 5px #000; /* Glow sutil no título */
 }
 
-/* Estilo do Canvas (Área de Jogo) */
+/* ====================================================================
+   ESTILO DO CANVAS (ÁREA DE JOGO)
+   ==================================================================== */
 canvas {
   border: 4px solid #2ecc71; 
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.7);
   border-radius: 10px;
+
+  /* Fundo de grama */
   background: url("grass.jpg"); 
   background-size: cover;
+  image-rendering: pixelated; /* Dá um ar retrô (pixels nítidos) */
+  filter: brightness(1.1) contrast(1.1); /* Mais vivo */
 }
-
 
 /* ====================================================================
    ESTILOS DO PLACAR (HUD)
@@ -39,16 +44,21 @@ canvas {
 #game-stats {
   margin-top: 15px; 
   display: flex; 
-  gap: 20px; /* Espaçamento entre os três itens */
+  gap: 20px; /* Espaçamento entre os itens */
   font-size: 1.3rem; 
   font-weight: bold;
   color: #f39c12; 
   text-shadow: 1px 1px 3px #000;
+
+  /* Caixa semitransparente para destacar o HUD */
+  padding: 5px 15px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* Estilo do Recorde (High Score) */
 #high-score {
-    color: #f1c40f; 
+  color: #f1c40f; 
 }
 
 /* Estilo do Contador de Maçãs */
@@ -56,19 +66,18 @@ canvas {
   color: #e74c3c; 
 }
 
-
 /* ====================================================================
    ESTILOS DOS CONTROLES (BOTÕES)
    ==================================================================== */
 
 /* Contêiner dos Botões de Pausa/Retomar */
 #controls {
-  margin-top: 5px; /* Margem ajustada para ficar mais perto do placar */
+  margin-top: 5px; /* Aproxima os botões do placar */
   display: flex;
   gap: 10px;
 }
 
-/* Estilos dos botões de Pausa/Retomar */
+/* Estilos comuns dos botões */
 #controls button {
   padding: 10px 20px;
   font-size: 1rem;
@@ -79,23 +88,25 @@ canvas {
   transition: 0.2s; 
 }
 
+/* Botão de Pausa (vermelho com gradiente) */
 #pauseBtn {
-  background: #e74c3c; 
+  background: linear-gradient(180deg, #e74c3c, #c0392b);
   color: white;
   box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
+/* Botão de Retomar (verde com gradiente) */
 #resumeBtn {
-  background: #2ecc71; 
+  background: linear-gradient(180deg, #2ecc71, #27ae60);
   color: white;
   box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
+/* Efeito hover em todos os botões */
 #controls button:hover {
   opacity: 0.8;
   transform: scale(1.05); 
 }
-
 
 /* ====================================================================
    ESTILOS DAS TELAS DE OVERLAY (MENU E GAME OVER)
@@ -103,7 +114,7 @@ canvas {
 
 /* Estilo comum para as telas que ficam sobre o canvas */
 .overlay {
-  position: absolute; /* Permite posicionamento sobre o canvas */
+  position: absolute; /* Fica sobre o canvas */
   width: 400px; /* Igual à largura do canvas */
   height: 400px; /* Igual à altura do canvas */
   border-radius: 10px;
@@ -112,8 +123,12 @@ canvas {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 10; /* Garante que fique acima do canvas */
+  z-index: 10; /* Fica acima do canvas */
   text-align: center;
+
+  /* Borda e glow verde */
+  border: 3px solid #2ecc71;
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
 }
 
 /* Classe usada pelo JS para esconder a tela */
@@ -126,34 +141,36 @@ canvas {
   color: #f1c40f;
   font-size: 2.5rem;
   margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(241, 196, 15, 0.8);
 }
 
-/* Cor de destaque para o título de Game Over */
+/* Cor e glow para o título de Game Over */
 #gameOverScreen h2 {
-    color: #e74c3c; 
+  color: #e74c3c; 
+  text-shadow: 0 0 15px rgba(231, 76, 60, 0.9);
 }
 
 /* Estilo para os botões nas telas de overlay */
 .overlay button {
-    padding: 15px 30px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: #2ecc71;
-    color: white;
-    margin-top: 20px;
-    transition: 0.2s;
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #2ecc71;
+  color: white;
+  margin-top: 20px;
+  transition: 0.2s;
 }
 
 .overlay button:hover {
-    opacity: 0.9;
-    transform: scale(1.05);
+  opacity: 0.9;
+  transform: scale(1.05);
 }
 
 /* Estilo do texto da pontuação final */
 #finalScoreText {
-    font-size: 1.2rem;
-    color: #bdc3c7;
+  font-size: 1.2rem;
+  color: #bdc3c7;
 }
