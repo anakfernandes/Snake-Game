@@ -56,8 +56,6 @@ Os arquivos contêm comentários detalhados para facilitar a leitura e futuras m
 
 ## 💡 Próximas Ideias
 
-Se você quiser continuar a desenvolver o projeto, considere adicionar:
-
 - 🎵 **Sons**: Efeitos sonoros para comer, morte e progressão de nível.  
 - ⚡ **Power-ups**: Itens temporários que dão vantagens (ex: escudo, lentidão).  
 - 🗺️ **Seleção de Mapas**: Diferentes layouts de obstáculos no menu.  
