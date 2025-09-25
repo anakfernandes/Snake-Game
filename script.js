@@ -2,54 +2,90 @@
 // CONFIGURAÇÃO INICIAL E VARIÁVEIS GLOBAIS
 // ====================================================================================
 
-// Obtém o elemento Canvas e o contexto 2D
+// Canvas e contexto 2D
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-// Obtém os elementos do HUD (Placares)
-const scoreDisplay = document.getElementById('score');
-const applesEatenDisplay = document.getElementById('apples-eaten'); 
-const highScoreDisplay = document.getElementById('high-score'); 
 
-// NOVO: Seletores de Tela
+// Elementos do HUD (placares)
+const scoreDisplay = document.getElementById('score'); // Mostra pontuação
+const applesEatenDisplay = document.getElementById('apples-eaten'); // Mostra maçãs comidas
+const highScoreDisplay = document.getElementById('high-score'); // Mostra recorde
+
+// Elementos de menu e tela de game over
 const mainMenu = document.getElementById('mainMenu');
 const gameOverScreen = document.getElementById('gameOverScreen');
-const finalScoreText = document.getElementById('finalScoreText'); 
-let gameRunning = false; // Flag para controlar se o jogo está ativo
+const finalScoreText = document.getElementById('finalScoreText'); // Pontuação final
 
-const gridSize = 20; 
-let snake = [{ x: 10, y: 10 }];
-let foods = []; 
-const maxFoods = 3; 
-let direction = 'right'; 
-let changingDirection = false; 
-let score = 0; 
-let applesEaten = 0; 
-let highScore = 0; 
+// Flag para saber se o jogo está rodando
+let gameRunning = false;
 
-// VELOCIDADE E PROGRESSÃO
-const BASE_SPEED = 300; 
-const SPEED_DECREMENT = 20; 
+// Configurações da grade e cobrinha
+const gridSize = 20; // Tamanho de cada "bloco"
+let snake = [{ x: 10, y: 10 }]; // Posição inicial da cobrinha
+let foods = []; // Lista de comidas (maçãs)
+const maxFoods = 3; // Número máximo de maçãs na tela
+let direction = 'right'; // Direção inicial
+let changingDirection = false; // Impede mudanças de direção rápidas demais
+let score = 0; // Pontuação
+let applesEaten = 0; // Número de maçãs comidas
+let highScore = 0; // Recorde
+
+// Velocidade do jogo
+const BASE_SPEED = 300; // Intervalo inicial em ms
+const SPEED_DECREMENT = 20; // Quanto diminui a cada fase
 let currentSpeed = BASE_SPEED; 
-let gameInterval; 
+let gameInterval; // Armazena o setInterval do loop do jogo
 
-// OBSTÁCULOS: Divididos em Níveis
+// Obstáculos divididos por níveis de progressão
 const OBSTACLE_LEVELS = [
-    [
-        { x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 },
-    ],
-    [
-        { x: 15, y: 15 }, { x: 16, y: 15 }, { x: 17, y: 15 },
-    ],
-    [
-        { x: 10, y: 2 }, { x: 10, y: 3 }, { x: 11, y: 3 },
-    ],
+    [{ x: 5, y: 5 }, { x: 5, y: 6 }, { x: 5, y: 7 }],   // Nível 1
+    [{ x: 15, y: 15 }, { x: 16, y: 15 }, { x: 17, y: 15 }], // Nível 2
+    [{ x: 10, y: 2 }, { x: 10, y: 3 }, { x: 11, y: 3 }] // Nível 3
 ];
-let activeObstacles = []; 
-const PROGRESSION_STEP = 5; 
-let currentProgressionStep = 0; 
+let activeObstacles = []; // Obstáculos atualmente ativos
+const PROGRESSION_STEP = 5; // A cada 5 maçãs, aumenta dificuldade
+let currentProgressionStep = 0; // Controle da progressão
 
+// Imagem da maçã
 const appleImage = new Image();
 appleImage.src = 'apple.png'; 
+
+// ====================================================================================
+// SONS DO JOGO (Web Audio API)
+// ====================================================================================
+
+// Cria o contexto de áudio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// Função para tocar som dependendo do tipo de evento
+function playSound(type) {
+    const oscillator = audioCtx.createOscillator(); // Gera o som
+    const gainNode = audioCtx.createGain(); // Controle do volume
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    switch (type) {
+        case "eat": // Comer maçã
+            oscillator.type = "sine";
+            oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            break;
+        case "gameover": // Game Over
+            oscillator.type = "square";
+            oscillator.frequency.setValueAtTime(120, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            break;
+        case "start": // Início do jogo
+            oscillator.type = "triangle";
+            oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            break;
+    }
+
+    oscillator.start(); // Começa o som
+    oscillator.stop(audioCtx.currentTime + 0.25); // Duração curta
+}
 
 // ====================================================================================
 // FUNÇÕES DE PERSISTÊNCIA E INICIALIZAÇÃO
@@ -66,7 +102,7 @@ function loadHighScore() {
     }
 }
 
-// Salva o recorde
+// Salva o recorde se for maior que o atual
 function saveHighScore() {
     if (score > highScore) {
         highScore = score;
@@ -75,7 +111,7 @@ function saveHighScore() {
     }
 }
 
-// Gera comidas
+// Gera as maçãs aleatórias no campo
 function generateFood() {
   while (foods.length < maxFoods) {
     let newFood = {
@@ -87,13 +123,13 @@ function generateFood() {
 }
 
 // ====================================================================================
-// FUNÇÃO DE DESENHO
+// FUNÇÃO DE DESENHO NO CANVAS
 // ====================================================================================
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa a tela
 
-    // Desenha Obstáculos Ativos
+    // Desenha obstáculos
     ctx.fillStyle = "#34495e"; 
     activeObstacles.forEach(obstacle => {
         let x = obstacle.x * gridSize;
@@ -103,13 +139,13 @@ function draw() {
         ctx.strokeRect(x, y, gridSize, gridSize);
     });
     
-    // Desenha a Cobrinha
+    // Desenha a cobrinha
     snake.forEach((segment, index) => {
         let x = segment.x * gridSize + gridSize / 2;
         let y = segment.y * gridSize + gridSize / 2;
 
         if (index === 0) {
-            // Cabeça (código mantido)
+            // Cabeça
             let gradient = ctx.createRadialGradient(x, y, 4, x, y, gridSize / 1.2);
             gradient.addColorStop(0, "#2ecc71");
             gradient.addColorStop(1, "#27ae60");
@@ -118,21 +154,21 @@ function draw() {
             ctx.arc(x, y, gridSize / 2, 0, Math.PI * 2);
             ctx.fill();
 
-            // Olhos Brancos
+            // Olhos
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.arc(x - 4, y - 4, 3, 0, Math.PI * 2); 
             ctx.arc(x + 4, y - 4, 3, 0, Math.PI * 2); 
             ctx.fill();
 
-            // Pupilas Pretas (CORRIGIDO: ambos usam y - 4)
+            // Pupilas
             ctx.fillStyle = "black";
             ctx.beginPath();
-            ctx.arc(x - 4, y - 4, 1.5, 0, Math.PI * 2); // Olho esquerdo
-            ctx.arc(x + 4, y - 4, 1.5, 0, Math.PI * 2); // Olho direito
+            ctx.arc(x - 4, y - 4, 1.5, 0, Math.PI * 2);
+            ctx.arc(x + 4, y - 4, 1.5, 0, Math.PI * 2);
             ctx.fill();
         } else {
-            // Corpo (código mantido)
+            // Corpo
             let gradient = ctx.createRadialGradient(x, y, 3, x, y, gridSize / 1.2);
             gradient.addColorStop(0, "#27ae60");
             gradient.addColorStop(1, "#145a32");
@@ -143,7 +179,7 @@ function draw() {
         }
     });
 
-    // Desenha as Comidas
+    // Desenha maçãs
     ctx.shadowColor = "rgba(0,0,0,0.4)";
     ctx.shadowBlur = 6;
     foods.forEach(f => {
@@ -153,29 +189,26 @@ function draw() {
 }
 
 // ====================================================================================
-// LOOP PRINCIPAL DO JOGO (UPDATE)
+// LOOP PRINCIPAL DO JOGO
 // ====================================================================================
 
 function update() {
-    // Sai da função se o jogo não estiver rodando (pausa ou menu)
-    if (!gameRunning) return; 
+    if (!gameRunning) return; // Não atualiza se o jogo estiver pausado
 
-    if (isGameOver()) {
+    if (isGameOver()) { // Se bater, finaliza
         clearInterval(gameInterval);
-        gameRunning = false; // Marca o jogo como inativo
-
-        saveHighScore(); // Salva o recorde
-        
-        // Mostra a tela de Game Over
+        gameRunning = false;
+        saveHighScore();
         gameOverScreen.classList.remove('hidden');
         finalScoreText.textContent = `Sua Pontuação Final: ${score} - Maçãs Comidas: ${applesEaten}`;
-        
+        playSound('gameover');
         return;
     }
 
     changingDirection = false;
-    const head = { x: snake[0].x, y: snake[0].y };
 
+    // Atualiza posição da cabeça
+    const head = { x: snake[0].x, y: snake[0].y };
     switch (direction) {
         case 'right': head.x += 1; break;
         case 'left': head.x -= 1; break;
@@ -183,93 +216,74 @@ function update() {
         case 'down': head.y += 1; break;
     }
 
-    // EFEITO TÚNEL (Loop Around): Se bater na parede, reaparece no lado oposto
+    // Efeito túnel: se bater na parede, reaparece
     const maxGridX = canvas.width / gridSize;
     const maxGridY = canvas.height / gridSize;
-
     if (head.x < 0) head.x = maxGridX - 1;
     else if (head.x >= maxGridX) head.x = 0;
     if (head.y < 0) head.y = maxGridY - 1;
     else if (head.y >= maxGridY) head.y = 0;
 
-    snake.unshift(head);
+    snake.unshift(head); // Adiciona a cabeça ao início
 
-    // Colisão com Comidas
+    // Colisão com comida
     let foodEatenIndex = foods.findIndex(f => head.x === f.x && head.y === f.y);
-
     if (foodEatenIndex !== -1) {
         score += 10;
-        applesEaten += 1; 
-        
+        applesEaten += 1;
         scoreDisplay.textContent = `Pontuação: ${score}`;
-        applesEatenDisplay.textContent = `🍎 Comidas: ${applesEaten}`; 
-        
-        foods.splice(foodEatenIndex, 1);
-        generateFood(); 
-        
-        // LÓGICA DE PROGRESSÃO DE DIFICULDADE (Obstáculos + Velocidade)
-        const nextProgressionTarget = PROGRESSION_STEP * (currentProgressionStep + 1);
+        applesEatenDisplay.textContent = `🍎 Comidas: ${applesEaten}`;
+        foods.splice(foodEatenIndex, 1); // Remove comida
+        generateFood(); // Gera nova comida
+        playSound('eat'); // Som de comer
 
-        if (applesEaten >= nextProgressionTarget) 
-        {
-            // 1. Aumenta a velocidade
+        // Progressão de dificuldade
+        const nextProgressionTarget = PROGRESSION_STEP * (currentProgressionStep + 1);
+        if (applesEaten >= nextProgressionTarget) {
             if (currentSpeed > SPEED_DECREMENT) {
                 currentSpeed -= SPEED_DECREMENT;
                 clearInterval(gameInterval);
-                gameInterval = setInterval(update, currentSpeed); // Reinicia o loop
+                gameInterval = setInterval(update, currentSpeed);
             }
-            
-            // 2. Ativa o próximo nível de obstáculos
             if (currentProgressionStep < OBSTACLE_LEVELS.length) {
-                const nextObstacles = OBSTACLE_LEVELS[currentProgressionStep];
-                activeObstacles = activeObstacles.concat(nextObstacles); 
+                activeObstacles = activeObstacles.concat(OBSTACLE_LEVELS[currentProgressionStep]);
             }
-            
-            currentProgressionStep++; 
+            currentProgressionStep++;
         }
-        
     } else {
-        snake.pop(); 
+        snake.pop(); // Remove última parte do corpo
     }
 
-    draw();
+    draw(); // Atualiza canvas
 }
 
 // ====================================================================================
-// FUNÇÕES DE COLISÃO E CONTROLES
+// FUNÇÕES DE COLISÃO E CONTROLE DE DIREÇÃO
 // ====================================================================================
 
 function isGameOver() {
     const head = snake[0];
-    
-    // 1. Colisão com o próprio corpo
+    // Colisão com o próprio corpo
     for (let i = 1; i < snake.length; i++) {
-        if (head.x === snake[i].x && head.y === snake[i].y) {
-            return true;
-        }
+        if (head.x === snake[i].x && head.y === snake[i].y) return true;
     }
-
-    // 2. Colisão com OBSTÁCULOS ATIVOS
-    for (let i = 0; i < activeObstacles.length; i++) {
-        if (head.x === activeObstacles[i].x && head.y === activeObstacles[i].y) {
-            return true; 
-        }
+    // Colisão com obstáculos
+    for (let obs of activeObstacles) {
+        if (head.x === obs.x && head.y === obs.y) return true;
     }
-
     return false;
 }
 
+// Muda a direção da cobrinha com setas
 function changeDirection(event) {
     if (changingDirection) return;
     changingDirection = true;
-
     const key = event.key;
     const goingUp = direction === 'up';
     const goingDown = direction === 'down';
     const goingRight = direction === 'right';
     const goingLeft = direction === 'left';
 
-    // Impede o giro de 180 graus
     if (key === 'ArrowUp' && !goingDown) direction = 'up';
     else if (key === 'ArrowDown' && !goingUp) direction = 'down';
     else if (key === 'ArrowLeft' && !goingRight) direction = 'left';
@@ -282,13 +296,15 @@ function changeDirection(event) {
 
 let isPaused = false;
 
+// Pausa o jogo
 function pauseGame() {
-    if (gameRunning && !isPaused) { // Garante que só pausa se o jogo estiver rodando
+    if (gameRunning && !isPaused) {
         clearInterval(gameInterval); 
         isPaused = true;
     }
 }
 
+// Retoma o jogo
 function resumeGame() {
     if (isPaused) {
         gameInterval = setInterval(update, currentSpeed); 
@@ -296,12 +312,11 @@ function resumeGame() {
     }
 }
 
+// Inicia o jogo do zero
 function startGame() {
-    // 1. Oculta a tela de menu/game over
     mainMenu.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
 
-    // 2. Reseta o estado do jogo
     snake = [{ x: 10, y: 10 }];
     direction = 'right';
     score = 0;
@@ -312,29 +327,30 @@ function startGame() {
     isPaused = false;
     gameRunning = true;
 
-    // 3. Atualiza o HUD
     scoreDisplay.textContent = `Pontuação: 0`;
     applesEatenDisplay.textContent = `🍎 Comidas: 0`;
-    loadHighScore(); // Garante que o recorde esteja visível
+    loadHighScore();
 
     generateFood(); 
-    draw(); // Desenha o primeiro frame
-    gameInterval = setInterval(update, currentSpeed); // Inicia o loop
+    draw();
+    gameInterval = setInterval(update, currentSpeed); 
+
+    playSound('start'); // Som ao iniciar
 }
 
 // ====================================================================================
-// INICIALIZAÇÃO
+// INICIALIZAÇÃO DE EVENTOS
 // ====================================================================================
 
-// O jogo não inicia no carregamento da página, apenas prepara o ambiente:
-loadHighScore(); 
-generateFood(); 
-draw(); // Desenha a cobra e as comidas iniciais no fundo do menu
+loadHighScore(); // Carrega recorde
+generateFood(); // Gera comida inicial
+draw(); // Desenha cobrinha e comida
 
-// Event listeners para os botões de controle
+// Botões de menu
 document.getElementById('startButton').addEventListener('click', startGame);
 document.getElementById('restartButton').addEventListener('click', startGame);
-
 document.getElementById('pauseBtn').addEventListener('click', pauseGame);
 document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+
+// Captura setas do teclado
 document.addEventListener('keydown', changeDirection);
