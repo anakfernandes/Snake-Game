@@ -4,15 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Snake Game Turbinado!</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
-  
+
+  <!-- Favicon de cobrinha -->
+  <link rel="icon" type="favicon/png" href="https://i.imgur.com/5bXjz7W.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet"> 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  
+
   <h1>Snack Game</h1>
-  
+
   <div id="mainMenu" class="overlay">
     <h2>Bem-vindo ao Snake!</h2>
     <p>Use as setas para jogar. O desafio aumenta a cada 5 maçãs!</p>
@@ -26,18 +28,23 @@
   </div>
 
   <canvas id="gameCanvas" width="400" height="400"></canvas>
-  
+
   <div id="game-stats">
     <div id="high-score">Recorde: 0</div> 
     <div id="score">Pontuação: 0</div>
     <div id="apples-eaten">🍎 Comidas: 0</div>
   </div>
- 
+
   <div id="controls">
     <button id="pauseBtn">⏸️ Pausar</button>
     <button id="resumeBtn">▶️ Retomar</button>
   </div>
 
+  <!-- Sons do jogo -->
+  <audio id="eatSound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3"></audio>
+  <audio id="gameOverSound" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3"></audio>
+
   <script src="script.js"></script>
+
 </body>
 </html>
